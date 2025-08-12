@@ -93,16 +93,6 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
           ))}
         </div>
 
-        {/* AOSP Info */}
-        <div className="mt-8 bg-black/20 rounded-2xl p-4 backdrop-blur-sm">
-          <h3 className="text-sm font-medium text-white/90 mb-2">
-            Android Open Source Project
-          </h3>
-          <p className="text-xs text-white/70 leading-relaxed">
-            Spirit OS is built on AOSP without any Google services or tracking. 
-            All apps are verified and come from trusted sources like F-Droid and Aurora Store.
-          </p>
-        </div>
       </div>
     </div>
   );

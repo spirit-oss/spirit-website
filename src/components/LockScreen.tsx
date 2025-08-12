@@ -4,9 +4,10 @@ import { Lock, Unlock, ChevronUp } from 'lucide-react';
 
 interface LockScreenProps {
   onUnlock: () => void;
+  onUnlockComplete?: () => void;
 }
 
-export const LockScreen: React.FC<LockScreenProps> = ({ onUnlock }) => {
+export const LockScreen: React.FC<LockScreenProps> = ({ onUnlock, onUnlockComplete }) => {
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [swipeY, setSwipeY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -43,6 +44,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ onUnlock }) => {
       setIsUnlocking(true);
       setTimeout(() => {
         onUnlock();
+        onUnlockComplete?.();
       }, 300);
     } else {
       setSwipeY(0);
@@ -71,6 +73,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ onUnlock }) => {
       setIsUnlocking(true);
       setTimeout(() => {
         onUnlock();
+        onUnlockComplete?.();
       }, 300);
     } else {
       setSwipeY(0);
@@ -94,6 +97,7 @@ export const LockScreen: React.FC<LockScreenProps> = ({ onUnlock }) => {
           setIsUnlocking(true);
           setTimeout(() => {
             onUnlock();
+            onUnlockComplete?.();
           }, 300);
         } else {
           setSwipeY(0);
