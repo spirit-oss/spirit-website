@@ -23,6 +23,7 @@ import { RetroArchApp } from './RetroArchApp';
 import { MapsApp } from './MapsApp';
 import { FDroidApp } from './FDroidApp';
 import { CameraCrashDialog } from './CameraCrashDialog';
+import { VolumePopup } from './VolumePopup';
 import { 
   Settings, 
   Camera, 
@@ -50,6 +51,9 @@ interface HomeScreenProps {
   cameraEnabled?: boolean;
   isFullyBooted?: boolean;
   isUnlocked?: boolean;
+  onVolumeChange?: (volume: number) => void;
+  showVolumePopup?: boolean;
+  onHideVolumePopup?: () => void;
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({
@@ -59,7 +63,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   micEnabled = true,
   cameraEnabled = true,
   isFullyBooted = true,
-  isUnlocked = true
+  isUnlocked = true,
+  onVolumeChange,
+  showVolumePopup = false,
+  onHideVolumePopup
 }) => {
   const [currentApp, setCurrentApp] = useState<string | null>(null);
   const [showAppDrawer, setShowAppDrawer] = useState(false);
@@ -346,6 +353,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       <CameraCrashDialog 
         isOpen={showCameraCrash}
         onClose={() => setShowCameraCrash(false)}
+      />
+
+      {/* Volume Popup */}
+      <VolumePopup
+        volume={volume}
+        isVisible={showVolumePopup}
+        onHide={onHideVolumePopup || (() => {})}
       />
     </div>
   );

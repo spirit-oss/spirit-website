@@ -7,13 +7,26 @@ const TestOS = () => {
   const [isPoweredOn, setIsPoweredOn] = useState(true);
   const [isBooting, setIsBooting] = useState(false);
   const [isShuttingDown, setIsShuttingDown] = useState(false);
-  const [isFullyBooted, setIsFullyBooted] = useState(true);
-  const [isUnlocked, setIsUnlocked] = useState(true);
+  const [isFullyBooted, setIsFullyBooted] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const [volume, setVolume] = useState(50);
   const [batteryEnabled, setBatteryEnabled] = useState(true);
   const [gpsEnabled, setGpsEnabled] = useState(true);
   const [micEnabled, setMicEnabled] = useState(true);
   const [cameraEnabled, setCameraEnabled] = useState(true);
+  const [showVolumePopup, setShowVolumePopup] = useState(false);
+
+  // Initialize with boot sequence on first load
+  React.useEffect(() => {
+    // Start with boot animation
+    setIsBooting(true);
+    setTimeout(() => {
+      setIsFullyBooted(true);
+      setIsBooting(false);
+      // Start locked after boot
+      setIsUnlocked(false);
+    }, 3000);
+  }, []);
 
   const handlePowerButton = (duration: 'short' | 'long') => {
     if (duration === 'short') {
@@ -49,8 +62,23 @@ const TestOS = () => {
     
     if (direction === 'up') {
       setVolume(prev => Math.min(100, prev + 10));
+      setShowVolumePopup(true);
     } else {
       setVolume(prev => Math.max(0, prev - 10));
+      setShowVolumePopup(true);
+    }
+  };
+
+  const handleBatteryToggle = () => {
+    if (batteryEnabled) {
+      // Immediately turn off phone when battery is disabled
+      setBatteryEnabled(false);
+      setIsPoweredOn(false);
+      setIsFullyBooted(false);
+      setIsUnlocked(false);
+    } else {
+      // Re-enable battery but don't auto-power on
+      setBatteryEnabled(true);
     }
   };
 
@@ -87,6 +115,9 @@ const TestOS = () => {
               cameraEnabled={cameraEnabled}
               isFullyBooted={isFullyBooted}
               isUnlocked={isUnlocked}
+              onVolumeChange={setVolume}
+              showVolumePopup={showVolumePopup}
+              onHideVolumePopup={() => setShowVolumePopup(false)}
             />
           </PhoneFrame>
         </div>
@@ -193,7 +224,7 @@ const TestOS = () => {
                   <span className="text-white">Battery</span>
                 </div>
                 <button
-                  onClick={() => setBatteryEnabled(!batteryEnabled)}
+                  onClick={handleBatteryToggle}
                   className={`w-12 h-6 rounded-full transition-all duration-200 ${
                     batteryEnabled ? 'bg-green-500' : 'bg-slate-600'
                   }`}
