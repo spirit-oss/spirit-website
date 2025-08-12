@@ -8,8 +8,10 @@ interface PhoneFrameProps {
   isPoweredOn?: boolean;
   isBooting?: boolean;
   isShuttingDown?: boolean;
+  isUnlocked?: boolean;
   onPowerComplete?: () => void;
   onShutdownComplete?: () => void;
+  onUnlockChange?: (unlocked: boolean) => void;
 }
 
 export const PhoneFrame: React.FC<PhoneFrameProps> = ({ 
@@ -17,19 +19,32 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
   isPoweredOn = true, 
   isBooting = false,
   isShuttingDown = false,
+  isUnlocked = false,
   onPowerComplete,
-  onShutdownComplete
+  onShutdownComplete,
+  onUnlockChange
 }) => {
-  const [isLocked, setIsLocked] = React.useState(true);
+  const [isLocked, setIsLocked] = React.useState(!isUnlocked);
+
+  // Update lock state when isUnlocked prop changes
+  React.useEffect(() => {
+    setIsLocked(!isUnlocked);
+  }, [isUnlocked]);
 
   React.useEffect(() => {
     const handleLockScreen = () => {
       setIsLocked(true);
+      onUnlockChange?.(false);
     };
 
     window.addEventListener('lockScreen', handleLockScreen);
     return () => window.removeEventListener('lockScreen', handleLockScreen);
-  }, []);
+  }, [onUnlockChange]);
+
+  const handleUnlock = () => {
+    setIsLocked(false);
+    onUnlockChange?.(true);
+  };
 
   return (
     <div className="relative mx-auto w-[375px] h-[812px] bg-phone-background rounded-[3rem] p-2 phone-shadow">
@@ -46,7 +61,7 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
           ) : (
             <>
           {isLocked ? (
-            <LockScreen onUnlock={() => setIsLocked(false)} />
+            <LockScreen onUnlock={handleUnlock} />
           ) : (
             children
           )}

@@ -32,8 +32,8 @@ const TestOS = () => {
     if (duration === 'short') {
       // Screen on/off (but keep powered)
       if (isPoweredOn) {
-        // Toggle lock state
-        setIsUnlocked(!isUnlocked);
+        // Lock the screen (always lock, don't toggle)
+        setIsUnlocked(false);
       }
     } else {
       // Power on/off functionality
@@ -104,8 +104,10 @@ const TestOS = () => {
             isPoweredOn={isPoweredOn}
             isBooting={isBooting}
             isShuttingDown={isShuttingDown}
+            isUnlocked={isUnlocked}
             onPowerComplete={handleBootComplete}
             onShutdownComplete={handleShutdownComplete}
+            onUnlockChange={setIsUnlocked}
           >
             <HomeScreen 
               volume={volume}

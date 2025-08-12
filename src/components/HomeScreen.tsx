@@ -76,6 +76,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [notificationOffset, setNotificationOffset] = useState(0);
   const [showCameraCrash, setShowCameraCrash] = useState(false);
 
+  // Reset lock state when isUnlocked prop changes
+  React.useEffect(() => {
+    if (!isUnlocked) {
+      setIsLocked(true);
+    }
+  }, [isUnlocked]);
+
   const mainApps = [
     { icon: Camera, name: 'Camera', gradient: false },
     { icon: Settings, name: 'Settings', gradient: false },
