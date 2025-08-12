@@ -32,8 +32,8 @@ const TestOS = () => {
     if (duration === 'short') {
       // Screen on/off (but keep powered)
       if (isPoweredOn) {
-        // Toggle lock state
-        setIsUnlocked(!isUnlocked);
+        // Lock the screen (always lock, don't toggle)
+        setIsUnlocked(false);
       }
     } else {
       // Power on/off functionality
