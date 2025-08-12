@@ -1,20 +1,35 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { StatusBar } from './StatusBar';
-import { Wifi, Bluetooth, Volume2, Battery, Flashlight, Airplay as Airplane, Settings, X, Sun, Moon } from 'lucide-react';
+import { Wifi, Bluetooth, Volume2, Battery, Flashlight, Airplay as Airplane, Settings, X, Sun, Moon, MapPin, Mic, Camera } from 'lucide-react';
 
-interface NotificationBarProps {
+interface NotificationPanelProps {
   onClose: () => void;
   isVisible: boolean;
+  volume?: number;
+  batteryEnabled?: boolean;
+  gpsEnabled?: boolean;
+  micEnabled?: boolean;
+  cameraEnabled?: boolean;
 }
 
-export const NotificationBar: React.FC<NotificationBarProps> = ({ onClose, isVisible }) => {
+export const NotificationPanel: React.FC<NotificationPanelProps> = ({ 
+  onClose, 
+  isVisible,
+  volume = 50,
+  batteryEnabled = true,
+  gpsEnabled = true,
+  micEnabled = true,
+  cameraEnabled = true
+}) => {
   const [wifiEnabled, setWifiEnabled] = useState(true);
   const [bluetoothEnabled, setBluetoothEnabled] = useState(false);
   const [flashlightEnabled, setFlashlightEnabled] = useState(false);
   const [airplaneMode, setAirplaneMode] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
-  const [volume, setVolume] = useState(75);
   const [brightness, setBrightness] = useState(60);
+  const [swipeStartY, setSwipeStartY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [panelOffset, setPanelOffset] = useState(0);
 
   const quickSettings = [
     {
@@ -61,13 +76,51 @@ export const NotificationBar: React.FC<NotificationBarProps> = ({ onClose, isVis
     }
   ];
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setSwipeStartY(e.touches[0].clientY);
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    
+    const currentY = e.touches[0].clientY;
+    const deltaY = currentY - swipeStartY;
+    
+    if (deltaY < 0) {
+      setPanelOffset(Math.max(deltaY, -300));
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (panelOffset < -100) {
+      onClose();
+    }
+    setPanelOffset(0);
+    setIsDragging(false);
+  };
+
   return (
-    <div className={`
-      absolute inset-0 z-50 transition-all duration-300 ease-out
-      ${isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}
-    `}>
+    <div 
+      className={`
+        absolute inset-0 z-50 transition-all duration-300 ease-out
+        ${isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}
+      `}
+      style={{
+        transform: `translateY(${panelOffset}px)`,
+        transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+      }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <div className="h-full bg-gradient-surface text-white flex flex-col">
         <StatusBar />
+        
+        {/* Drag Handle */}
+        <div className="flex justify-center py-2">
+          <div className="w-12 h-1 bg-white/30 rounded-full" />
+        </div>
         
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
@@ -110,6 +163,44 @@ export const NotificationBar: React.FC<NotificationBarProps> = ({ onClose, isVis
             ))}
           </div>
 
+          {/* Hardware Status */}
+          <div className="mb-6">
+            <h3 className="text-white/90 font-medium mb-4">Hardware Status</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className={`p-3 rounded-xl ${batteryEnabled ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+                <div className="flex items-center">
+                  <Battery className={`w-5 h-5 mr-2 ${batteryEnabled ? 'text-green-400' : 'text-red-400'}`} />
+                  <span className="text-white/90 text-sm">Battery</span>
+                </div>
+                <p className="text-xs text-white/60 mt-1">{batteryEnabled ? 'Enabled' : 'Disabled'}</p>
+              </div>
+
+              <div className={`p-3 rounded-xl ${gpsEnabled ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+                <div className="flex items-center">
+                  <MapPin className={`w-5 h-5 mr-2 ${gpsEnabled ? 'text-green-400' : 'text-red-400'}`} />
+                  <span className="text-white/90 text-sm">GPS</span>
+                </div>
+                <p className="text-xs text-white/60 mt-1">{gpsEnabled ? 'Enabled' : 'Disabled'}</p>
+              </div>
+
+              <div className={`p-3 rounded-xl ${micEnabled ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+                <div className="flex items-center">
+                  <Mic className={`w-5 h-5 mr-2 ${micEnabled ? 'text-green-400' : 'text-red-400'}`} />
+                  <span className="text-white/90 text-sm">Microphone</span>
+                </div>
+                <p className="text-xs text-white/60 mt-1">{micEnabled ? 'Enabled' : 'Disabled'}</p>
+              </div>
+
+              <div className={`p-3 rounded-xl ${cameraEnabled ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+                <div className="flex items-center">
+                  <Camera className={`w-5 h-5 mr-2 ${cameraEnabled ? 'text-green-400' : 'text-red-400'}`} />
+                  <span className="text-white/90 text-sm">Camera</span>
+                </div>
+                <p className="text-xs text-white/60 mt-1">{cameraEnabled ? 'Enabled' : 'Disabled'}</p>
+              </div>
+            </div>
+          </div>
+
           {/* Sliders */}
           <div className="space-y-6">
             {/* Brightness */}
@@ -143,14 +234,12 @@ export const NotificationBar: React.FC<NotificationBarProps> = ({ onClose, isVis
                 <span className="text-white/60 text-sm">{volume}%</span>
               </div>
               <div className="relative">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={volume}
-                  onChange={(e) => setVolume(parseInt(e.target.value))}
-                  className="w-full h-2 bg-white/20 rounded-full appearance-none cursor-pointer slider"
-                />
+                <div className="w-full h-2 bg-white/20 rounded-full">
+                  <div 
+                    className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                    style={{ width: `${volume}%` }}
+                  />
+                </div>
               </div>
             </div>
           </div>

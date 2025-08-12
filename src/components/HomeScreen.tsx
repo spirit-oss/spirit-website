@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StatusBar } from './StatusBar';
 import { AppIcon } from './AppIcon';
 import { AppDrawer } from './AppDrawer';
-import { NotificationBar } from './NotificationBar';
+import { NotificationPanel } from './NotificationPanel';
 import { SettingsApp } from './SettingsApp';
 import { PhoneApp } from './PhoneApp';
 import { MessagesApp } from './MessagesApp';
@@ -40,12 +40,27 @@ import {
   Clock
 } from 'lucide-react';
 
-export const HomeScreen: React.FC = () => {
+interface HomeScreenProps {
+  volume?: number;
+  batteryEnabled?: boolean;
+  gpsEnabled?: boolean;
+  micEnabled?: boolean;
+  cameraEnabled?: boolean;
+}
+
+export const HomeScreen: React.FC<HomeScreenProps> = ({
+  volume = 50,
+  batteryEnabled = true,
+  gpsEnabled = true,
+  micEnabled = true,
+  cameraEnabled = true
+}) => {
   const [currentApp, setCurrentApp] = useState<string | null>(null);
   const [showAppDrawer, setShowAppDrawer] = useState(false);
-  const [showNotificationBar, setShowNotificationBar] = useState(false);
+  const [showNotificationPanel, setShowNotificationPanel] = useState(false);
   const [swipeStartY, setSwipeStartY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [notificationOffset, setNotificationOffset] = useState(0);
 
   const mainApps = [
     { icon: Phone, name: 'Phone', gradient: true },
@@ -89,9 +104,11 @@ export const HomeScreen: React.FC = () => {
     const deltaY = currentY - swipeStartY;
     
     // Swipe down from top to show notification bar
-    if (swipeStartY < 100 && deltaY > 50) {
-      setShowNotificationBar(true);
-      setIsDragging(false);
+    if (swipeStartY < 100 && deltaY > 0) {
+      setNotificationOffset(Math.min(deltaY, 300));
+      if (deltaY > 100) {
+        setShowNotificationPanel(true);
+      }
     }
     
     // Swipe up from bottom to lock (handled by parent component)
@@ -105,6 +122,10 @@ export const HomeScreen: React.FC = () => {
 
   const handleTouchEnd = () => {
     setIsDragging(false);
+    if (notificationOffset > 100) {
+      setShowNotificationPanel(true);
+    }
+    setNotificationOffset(0);
   };
 
   if (currentApp === 'Settings') {
@@ -187,11 +208,16 @@ export const HomeScreen: React.FC = () => {
     return <AppDrawer onClose={closeAppDrawer} onAppSelect={openApp} />;
   }
 
-  if (showNotificationBar) {
+  if (showNotificationPanel) {
     return (
-      <NotificationBar 
-        onClose={() => setShowNotificationBar(false)} 
-        isVisible={showNotificationBar}
+      <NotificationPanel 
+        onClose={() => setShowNotificationPanel(false)} 
+        isVisible={showNotificationPanel}
+        volume={volume}
+        batteryEnabled={batteryEnabled}
+        gpsEnabled={gpsEnabled}
+        micEnabled={micEnabled}
+        cameraEnabled={cameraEnabled}
       />
     );
   }
@@ -202,6 +228,10 @@ export const HomeScreen: React.FC = () => {
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      style={{
+        transform: showNotificationPanel ? 'none' : `translateY(${Math.min(notificationOffset * 0.1, 30)}px)`,
+        transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+      }}
     >
       <StatusBar />
       
@@ -284,6 +314,14 @@ export const HomeScreen: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Notification Panel Overlay */}
+      {notificationOffset > 0 && !showNotificationPanel && (
+        <div 
+          className="absolute top-0 left-0 right-0 bg-gradient-surface border-b border-white/10"
+          style={{ height: `${Math.min(notificationOffset, 100)}px`, opacity: notificationOffset / 100 }}
+        />
+      )}
     </div>
   );
 };
