@@ -1,11 +1,20 @@
 import React from 'react';
 import { LockScreen } from './LockScreen';
+import { PowerAnimation } from './PowerAnimation';
 
 interface PhoneFrameProps {
   children: React.ReactNode;
+  isPoweredOn?: boolean;
+  isBooting?: boolean;
+  onPowerComplete?: () => void;
 }
 
-export const PhoneFrame: React.FC<PhoneFrameProps> = ({ children }) => {
+export const PhoneFrame: React.FC<PhoneFrameProps> = ({ 
+  children, 
+  isPoweredOn = true, 
+  isBooting = false,
+  onPowerComplete 
+}) => {
   const [isLocked, setIsLocked] = React.useState(true);
 
   React.useEffect(() => {
@@ -23,10 +32,18 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({ children }) => {
       <div className="w-full h-full bg-black rounded-[2.5rem] relative overflow-hidden">
         {/* Screen area */}
         <div className="absolute inset-1 bg-phone-screen rounded-[2rem] overflow-hidden">
+          {!isPoweredOn ? (
+            <div className="w-full h-full bg-black" />
+          ) : isBooting ? (
+            <PowerAnimation onComplete={onPowerComplete} />
+          ) : (
+            <>
           {isLocked ? (
             <LockScreen onUnlock={() => setIsLocked(false)} />
           ) : (
             children
+          )}
+            </>
           )}
         </div>
         
