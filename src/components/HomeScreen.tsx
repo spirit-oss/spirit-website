@@ -22,6 +22,7 @@ import { ContactsApp } from './ContactsApp';
 import { RetroArchApp } from './RetroArchApp';
 import { MapsApp } from './MapsApp';
 import { FDroidApp } from './FDroidApp';
+import { CameraCrashDialog } from './CameraCrashDialog';
 import { 
   Settings, 
   Camera, 
@@ -47,6 +48,8 @@ interface HomeScreenProps {
   gpsEnabled?: boolean;
   micEnabled?: boolean;
   cameraEnabled?: boolean;
+  isFullyBooted?: boolean;
+  isUnlocked?: boolean;
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({
@@ -54,7 +57,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   batteryEnabled = true,
   gpsEnabled = true,
   micEnabled = true,
-  cameraEnabled = true
+  cameraEnabled = true,
+  isFullyBooted = true,
+  isUnlocked = true
 }) => {
   const [currentApp, setCurrentApp] = useState<string | null>(null);
   const [showAppDrawer, setShowAppDrawer] = useState(false);
@@ -62,6 +67,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [swipeStartY, setSwipeStartY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [notificationOffset, setNotificationOffset] = useState(0);
+  const [showCameraCrash, setShowCameraCrash] = useState(false);
 
   const mainApps = [
     { icon: Camera, name: 'Camera', gradient: false },
@@ -79,7 +85,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const openApp = (appName: string) => {
     // Check if camera is disabled and user tries to open camera
     if (appName === 'Camera' && !cameraEnabled) {
-      alert('Camera not available - hardware disabled');
+      setShowCameraCrash(true);
       return;
     }
     setCurrentApp(appName);
@@ -90,6 +96,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   };
 
   const openAppDrawer = () => {
+    if (!isFullyBooted || !isUnlocked) return;
     setShowAppDrawer(true);
   };
 
@@ -98,11 +105,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isFullyBooted || !isUnlocked) return;
     setSwipeStartY(e.touches[0].clientY);
     setIsDragging(true);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isFullyBooted || !isUnlocked) return;
     if (!isDragging) return;
     
     const currentY = e.touches[0].clientY;
@@ -126,6 +135,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   };
 
   const handleTouchEnd = () => {
+    if (!isFullyBooted || !isUnlocked) return;
     setIsDragging(false);
     if (notificationOffset > 100) {
       setShowNotificationPanel(true);
@@ -223,6 +233,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         gpsEnabled={gpsEnabled}
         micEnabled={micEnabled}
         cameraEnabled={cameraEnabled}
+        isFullyBooted={isFullyBooted}
+        isUnlocked={isUnlocked}
       />
     );
   }
@@ -329,6 +341,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           style={{ height: `${Math.min(notificationOffset, 100)}px`, opacity: notificationOffset / 100 }}
         />
       )}
+
+      {/* Camera Crash Dialog */}
+      <CameraCrashDialog 
+        isOpen={showCameraCrash}
+        onClose={() => setShowCameraCrash(false)}
+      />
     </div>
   );
 };

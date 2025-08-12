@@ -6,6 +6,9 @@ import { Power, Volume2, VolumeX, Battery, MapPin, Mic, Camera } from 'lucide-re
 const TestOS = () => {
   const [isPoweredOn, setIsPoweredOn] = useState(true);
   const [isBooting, setIsBooting] = useState(false);
+  const [isShuttingDown, setIsShuttingDown] = useState(false);
+  const [isFullyBooted, setIsFullyBooted] = useState(true);
+  const [isUnlocked, setIsUnlocked] = useState(true);
   const [volume, setVolume] = useState(50);
   const [batteryEnabled, setBatteryEnabled] = useState(true);
   const [gpsEnabled, setGpsEnabled] = useState(true);
@@ -16,17 +19,21 @@ const TestOS = () => {
     if (duration === 'short') {
       // Screen on/off (but keep powered)
       if (isPoweredOn) {
-        // Just dim screen or lock - for demo purposes, we'll keep it simple
-        console.log('Screen toggle');
+        // Toggle lock state
+        setIsUnlocked(!isUnlocked);
       }
     } else {
       // Power on/off functionality
       if (isPoweredOn) {
-        // Power off
-        setIsPoweredOn(false);
+        // Start shutdown animation
+        setIsShuttingDown(true);
+        setIsFullyBooted(false);
+        setIsUnlocked(false);
       } else {
         // Power on with boot animation
         setIsBooting(true);
+        setIsFullyBooted(false);
+        setIsUnlocked(false);
         setTimeout(() => {
           setIsPoweredOn(true);
         }, 100);
@@ -35,6 +42,11 @@ const TestOS = () => {
   };
 
   const handleVolumeChange = (direction: 'up' | 'down') => {
+    // Only allow volume changes if phone is fully booted and unlocked
+    if (!isPoweredOn || !isFullyBooted || !isUnlocked) {
+      return;
+    }
+    
     if (direction === 'up') {
       setVolume(prev => Math.min(100, prev + 10));
     } else {
@@ -44,6 +56,15 @@ const TestOS = () => {
 
   const handleBootComplete = () => {
     setIsBooting(false);
+    setIsFullyBooted(true);
+    setIsUnlocked(false); // Start locked after boot
+  };
+
+  const handleShutdownComplete = () => {
+    setIsShuttingDown(false);
+    setIsPoweredOn(false);
+    setIsFullyBooted(false);
+    setIsUnlocked(false);
   };
 
   return (
@@ -54,7 +75,9 @@ const TestOS = () => {
           <PhoneFrame 
             isPoweredOn={isPoweredOn}
             isBooting={isBooting}
+            isShuttingDown={isShuttingDown}
             onPowerComplete={handleBootComplete}
+            onShutdownComplete={handleShutdownComplete}
           >
             <HomeScreen 
               volume={volume}
@@ -62,6 +85,8 @@ const TestOS = () => {
               gpsEnabled={gpsEnabled}
               micEnabled={micEnabled}
               cameraEnabled={cameraEnabled}
+              isFullyBooted={isFullyBooted}
+              isUnlocked={isUnlocked}
             />
           </PhoneFrame>
         </div>
@@ -80,24 +105,29 @@ const TestOS = () => {
             <button
               onClick={() => handlePowerButton('short')}
               className={`w-full font-medium py-3 px-6 rounded-xl transition-all duration-200 mb-2 ${
-                isPoweredOn 
-                  ? 'bg-green-500 hover:bg-green-600 text-white' 
+                isPoweredOn && isFullyBooted
+                  ? (isUnlocked ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : 'bg-green-500 hover:bg-green-600 text-white')
                   : 'bg-gray-600 hover:bg-gray-700 text-gray-300'
               }`}
+              disabled={isBooting || isShuttingDown}
             >
               <Power className="w-5 h-5 inline mr-2" />
-              {isPoweredOn ? 'Screen' : 'Power On'}
+              {!isPoweredOn ? 'Power On' : 
+               !isFullyBooted ? 'Booting...' :
+               isUnlocked ? 'Lock Screen' : 'Unlock Screen'}
             </button>
             
             <button
               onClick={() => handlePowerButton('long')}
               className={`w-full font-medium py-2 px-6 rounded-xl transition-all duration-200 mb-3 text-sm ${
-                isPoweredOn 
+                isPoweredOn && !isShuttingDown
                   ? 'bg-red-500 hover:bg-red-600 text-white' 
                   : 'bg-green-500 hover:bg-green-600 text-white'
               }`}
+              disabled={isBooting || isShuttingDown}
             >
-              {isPoweredOn ? 'Power Off' : 'Boot Up'}
+              {isShuttingDown ? 'Shutting Down...' :
+               isPoweredOn ? 'Power Off' : 'Boot Up'}
             </button>
           </div>
 
@@ -112,22 +142,22 @@ const TestOS = () => {
               <button
                 onClick={() => handleVolumeChange('down')}
                 className={`flex-1 font-medium py-3 px-4 rounded-xl transition-all duration-200 ${
-                  isPoweredOn 
+                  isPoweredOn && isFullyBooted && isUnlocked
                     ? 'bg-blue-500 hover:bg-blue-600 text-white' 
                     : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                 }`}
-                disabled={!isPoweredOn}
+                disabled={!isPoweredOn || !isFullyBooted || !isUnlocked}
               >
                 V-
               </button>
               <button
                 onClick={() => handleVolumeChange('up')}
                 className={`flex-1 font-medium py-3 px-4 rounded-xl transition-all duration-200 ${
-                  isPoweredOn 
+                  isPoweredOn && isFullyBooted && isUnlocked
                     ? 'bg-blue-500 hover:bg-blue-600 text-white' 
                     : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                 }`}
-                disabled={!isPoweredOn}
+                disabled={!isPoweredOn || !isFullyBooted || !isUnlocked}
               >
                 V+
               </button>
@@ -136,10 +166,19 @@ const TestOS = () => {
             <div className="text-center text-white font-medium">{volume}%</div>
             <div className="w-full bg-slate-600 rounded-full h-2 mt-2">
               <div 
-                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  isPoweredOn && isFullyBooted && isUnlocked ? 'bg-blue-500' : 'bg-gray-500'
+                }`}
                 style={{ width: `${volume}%` }}
               />
             </div>
+            {(!isPoweredOn || !isFullyBooted || !isUnlocked) && (
+              <div className="text-center text-xs text-slate-400 mt-2">
+                {!isPoweredOn ? 'Phone is off' :
+                 !isFullyBooted ? 'Phone is booting' :
+                 'Screen is locked'}
+              </div>
+            )}
           </div>
 
           {/* Privacy Switches */}

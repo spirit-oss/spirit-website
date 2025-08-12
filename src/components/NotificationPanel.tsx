@@ -10,6 +10,8 @@ interface NotificationPanelProps {
   gpsEnabled?: boolean;
   micEnabled?: boolean;
   cameraEnabled?: boolean;
+  isFullyBooted?: boolean;
+  isUnlocked?: boolean;
 }
 
 export const NotificationPanel: React.FC<NotificationPanelProps> = ({ 
@@ -19,7 +21,9 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
   batteryEnabled = true,
   gpsEnabled = true,
   micEnabled = true,
-  cameraEnabled = true
+  cameraEnabled = true,
+  isFullyBooted = true,
+  isUnlocked = true
 }) => {
   const [wifiEnabled, setWifiEnabled] = useState(true);
   const [bluetoothEnabled, setBluetoothEnabled] = useState(false);
@@ -234,12 +238,19 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
                 <span className="text-white/60 text-sm">{volume}%</span>
               </div>
               <div className="relative">
-                <div className="w-full h-2 bg-white/20 rounded-full">
+                <div className={`w-full h-2 bg-white/20 rounded-full ${!isFullyBooted || !isUnlocked ? 'opacity-50' : ''}`}>
                   <div 
                     className="h-full bg-blue-500 rounded-full transition-all duration-300"
                     style={{ width: `${volume}%` }}
                   />
                 </div>
+                {(!isFullyBooted || !isUnlocked) && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xs text-white/60 bg-black/50 px-2 py-1 rounded">
+                      Locked
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
