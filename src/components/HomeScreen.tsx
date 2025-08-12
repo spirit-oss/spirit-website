@@ -37,7 +37,8 @@ import {
   Download,
   Cloud,
   Image,
-  Clock
+  Clock,
+  Search
 } from 'lucide-react';
 
 interface HomeScreenProps {
@@ -63,17 +64,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [notificationOffset, setNotificationOffset] = useState(0);
 
   const mainApps = [
-    { icon: Phone, name: 'Phone', gradient: true },
-    { icon: MessageSquare, name: 'Messages', gradient: false },
     { icon: Camera, name: 'Camera', gradient: false },
-    { icon: Globe, name: 'Browser', gradient: false },
-  ];
-
-  const dockApps = [
     { icon: Settings, name: 'Settings', gradient: false },
     { icon: Calculator, name: 'Calculator', gradient: false },
     { icon: Calendar, name: 'Calendar', gradient: false },
     { icon: Music, name: 'Music', gradient: false },
+  ];
+
+  const dockApps = [
+    { icon: Phone, name: 'Phone', gradient: true },
+    { icon: MessageSquare, name: 'Messages', gradient: false },
   ];
 
   const openApp = (appName: string) => {
@@ -248,8 +248,21 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           <p className="text-sm text-white/60 mt-1">Privacy-First Android</p>
         </div>
 
+        {/* DuckDuckGo Search Widget */}
+        <div className="mb-8">
+          <button
+            onClick={() => openApp('Browser')}
+            className="w-full bg-black/20 backdrop-blur-sm rounded-2xl p-4 border border-white/10 hover:bg-black/30 transition-smooth"
+          >
+            <div className="flex items-center">
+              <Search className="w-5 h-5 text-white/70 mr-3" />
+              <span className="text-white/70 text-left">Search DuckDuckGo</span>
+            </div>
+          </button>
+        </div>
+
         {/* Main apps grid */}
-        <div className="grid grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-4 gap-6 mb-12">
           {mainApps.map((app, index) => (
             <AppIcon
               key={index}
@@ -259,28 +272,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               onClick={() => openApp(app.name)}
             />
           ))}
-        </div>
-
-        {/* Features showcase */}
-        <div className="bg-black/20 rounded-2xl p-4 mb-8 backdrop-blur-sm">
-          <div className="flex items-center mb-3">
-            <Shield className="w-5 h-5 text-accent mr-2" />
-            <span className="text-sm font-medium text-white/90">Privacy Features</span>
-          </div>
-          <div className="space-y-2 text-xs text-white/70">
-            <div className="flex items-center">
-              <div className="w-2 h-2 bg-accent rounded-full mr-2" />
-              <span>No Google Services</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-2 h-2 bg-accent rounded-full mr-2" />
-              <span>Open Source AOSP</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-2 h-2 bg-accent rounded-full mr-2" />
-              <span>Aurora Store & F-Droid</span>
-            </div>
-          </div>
         </div>
 
         {/* App drawer button */}
@@ -301,16 +292,39 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       {/* Dock */}
       <div className="px-6 pb-8">
         <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-4">
-          <div className="grid grid-cols-4 gap-4 justify-items-center">
-            {dockApps.map((app, index) => (
-              <AppIcon
-                key={index}
-                icon={app.icon}
-                name={app.name}
-                gradient={app.gradient}
-                onClick={() => openApp(app.name)}
-              />
-            ))}
+          <div className="flex justify-center items-center space-x-8">
+            {/* Phone */}
+            <AppIcon
+              icon={dockApps[0].icon}
+              name={dockApps[0].name}
+              gradient={dockApps[0].gradient}
+              onClick={() => openApp(dockApps[0].name)}
+            />
+            
+            {/* App Drawer Button */}
+            <button
+              onClick={openAppDrawer}
+              className="flex flex-col items-center space-y-2 cursor-pointer group transition-smooth"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center app-shadow group-hover:scale-110 transition-spring">
+                <div className="grid grid-cols-2 gap-1">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="w-2 h-2 bg-white/60 rounded-full" />
+                  ))}
+                </div>
+              </div>
+              <span className="text-xs text-white/90 text-center leading-tight max-w-[4rem] break-words">
+                Apps
+              </span>
+            </button>
+            
+            {/* Messages */}
+            <AppIcon
+              icon={dockApps[1].icon}
+              name={dockApps[1].name}
+              gradient={dockApps[1].gradient}
+              onClick={() => openApp(dockApps[1].name)}
+            />
           </div>
         </div>
       </div>
