@@ -77,6 +77,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   ];
 
   const openApp = (appName: string) => {
+    // Check if camera is disabled and user tries to open camera
+    if (appName === 'Camera' && !cameraEnabled) {
+      alert('Camera not available - hardware disabled');
+      return;
+    }
     setCurrentApp(appName);
   };
 
@@ -205,7 +210,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   }
 
   if (showAppDrawer) {
-    return <AppDrawer onClose={closeAppDrawer} onAppSelect={openApp} />;
+    return <AppDrawer onClose={closeAppDrawer} onAppSelect={openApp} cameraEnabled={cameraEnabled} />;
   }
 
   if (showNotificationPanel) {
@@ -233,7 +238,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         transition: isDragging ? 'none' : 'transform 0.3s ease-out'
       }}
     >
-      <StatusBar />
+      <StatusBar gpsEnabled={gpsEnabled} micEnabled={micEnabled} />
       
       {/* Wallpaper area with apps */}
       <div className="flex-1 relative px-6 py-8">
@@ -275,22 +280,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </div>
 
         {/* App drawer button */}
-        <div className="flex justify-center mb-8">
-          <button
-            onClick={openAppDrawer}
-            className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center transition-smooth hover:bg-white/20"
-          >
-            <div className="grid grid-cols-2 gap-1">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="w-1.5 h-1.5 bg-white/60 rounded-full" />
-              ))}
-            </div>
-          </button>
-        </div>
       </div>
 
       {/* Dock */}
-      <div className="px-6 pb-8">
+      <div className="px-6 pb-4">
         <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-4">
           <div className="flex justify-center items-center space-x-8">
             {/* Phone */}

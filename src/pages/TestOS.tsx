@@ -99,10 +99,6 @@ const TestOS = () => {
             >
               {isPoweredOn ? 'Power Off' : 'Boot Up'}
             </button>
-            
-            <p className="text-sm text-slate-400 text-center">
-              Short: Screen Toggle • Long: Power On/Off
-            </p>
           </div>
 
           {/* Volume Controls */}
@@ -233,14 +229,11 @@ const TestOS = () => {
             </div>
           </div>
 
-          {/* Status Info */}
-          <div className="mt-8 p-4 bg-slate-700/50 rounded-xl">
-            <h4 className="text-sm font-medium text-slate-300 mb-2">System Status</h4>
-            <div className="text-xs text-slate-400 space-y-1">
-              <div>Power: {isPoweredOn ? (isBooting ? 'Booting' : 'On') : 'Off'}</div>
-              <div>Volume: {volume}%</div>
-              <div>Privacy Mode: {!batteryEnabled || !gpsEnabled || !micEnabled || !cameraEnabled ? 'Active' : 'Inactive'}</div>
-            </div>
+          {/* Disclaimer */}
+          <div className="mt-8 text-center">
+            <p className="text-xs text-slate-400 italic">
+              This is a simulated OS, the real OS might vary
+            </p>
           </div>
         </div>
       </div>

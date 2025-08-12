@@ -24,9 +24,14 @@ import {
 interface AppDrawerProps {
   onClose: () => void;
   onAppSelect: (appName: string) => void;
+  cameraEnabled?: boolean;
 }
 
-export const AppDrawer: React.FC<AppDrawerProps> = ({ onClose, onAppSelect }) => {
+export const AppDrawer: React.FC<AppDrawerProps> = ({ 
+  onClose, 
+  onAppSelect, 
+  cameraEnabled = true 
+}) => {
   const [currentApp, setCurrentApp] = React.useState<string | null>(null);
   
   if (currentApp === 'Aurora Store') {
@@ -77,6 +82,8 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({ onClose, onAppSelect }) =>
               onClick={() => {
                 if (app.name === 'Aurora Store') {
                   setCurrentApp(app.name);
+                } else if (app.name === 'Camera' && !cameraEnabled) {
+                  alert('Camera not available - hardware disabled');
                 } else {
                   onAppSelect(app.name);
                 }
