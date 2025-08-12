@@ -17,7 +17,7 @@ export const PowerAnimation: React.FC<PowerAnimationProps> = ({ onComplete }) =>
         setStage('complete');
         onComplete?.();
       }
-    }, stage === 'boot' ? 2000 : 1500);
+    }, stage === 'boot' ? 2500 : 1500);
 
     return () => clearTimeout(timer);
   }, [stage, onComplete]);
