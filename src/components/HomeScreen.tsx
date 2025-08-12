@@ -19,6 +19,9 @@ import { WeatherApp } from './WeatherApp';
 import { GalleryApp } from './GalleryApp';
 import { ClockApp } from './ClockApp';
 import { ContactsApp } from './ContactsApp';
+import { RetroArchApp } from './RetroArchApp';
+import { MapsApp } from './MapsApp';
+import { FDroidApp } from './FDroidApp';
 import { 
   Settings, 
   Camera, 
@@ -166,6 +169,18 @@ export const HomeScreen: React.FC = () => {
 
   if (currentApp === 'Contacts') {
     return <ContactsApp onBack={closeApp} />;
+  }
+
+  if (currentApp === 'RetroArch') {
+    return <RetroArchApp onBack={closeApp} />;
+  }
+
+  if (currentApp === 'Maps') {
+    return <MapsApp onBack={closeApp} />;
+  }
+
+  if (currentApp === 'F-Droid') {
+    return <FDroidApp onBack={closeApp} />;
   }
 
   if (showAppDrawer) {
