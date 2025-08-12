@@ -1,19 +1,24 @@
 import React from 'react';
 import { LockScreen } from './LockScreen';
 import { PowerAnimation } from './PowerAnimation';
+import { PowerOffAnimation } from './PowerOffAnimation';
 
 interface PhoneFrameProps {
   children: React.ReactNode;
   isPoweredOn?: boolean;
   isBooting?: boolean;
+  isShuttingDown?: boolean;
   onPowerComplete?: () => void;
+  onShutdownComplete?: () => void;
 }
 
 export const PhoneFrame: React.FC<PhoneFrameProps> = ({ 
   children, 
   isPoweredOn = true, 
   isBooting = false,
-  onPowerComplete 
+  isShuttingDown = false,
+  onPowerComplete,
+  onShutdownComplete
 }) => {
   const [isLocked, setIsLocked] = React.useState(true);
 
@@ -34,6 +39,8 @@ export const PhoneFrame: React.FC<PhoneFrameProps> = ({
         <div className="absolute inset-1 bg-phone-screen rounded-[2rem] overflow-hidden">
           {!isPoweredOn ? (
             <div className="w-full h-full bg-black" />
+          ) : isShuttingDown ? (
+            <PowerOffAnimation onComplete={onShutdownComplete} />
           ) : isBooting ? (
             <PowerAnimation onComplete={onPowerComplete} />
           ) : (

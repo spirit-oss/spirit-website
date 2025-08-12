@@ -83,7 +83,8 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
                 if (app.name === 'Aurora Store') {
                   setCurrentApp(app.name);
                 } else if (app.name === 'Camera' && !cameraEnabled) {
-                  alert('Camera not available - hardware disabled');
+                  // Let the parent handle the crash dialog
+                  onAppSelect(app.name);
                 } else {
                   onAppSelect(app.name);
                 }
