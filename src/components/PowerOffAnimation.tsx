@@ -35,15 +35,16 @@ export const PowerOffAnimation: React.FC<PowerOffAnimationProps> = ({ onComplete
 
           {/* Animated shutdown bar */}
           <div className="w-48 h-1 bg-white/20 rounded-full overflow-hidden">
-            <div className="h-full bg-red-500 rounded-full animate-pulse" style={{
-              animation: 'shutdown 2s ease-out forwards'
-            }} />
+            <div className="h-full bg-red-500 rounded-full shutdown-animation" />
           </div>
           
-          <style jsx>{`
+          <style>{`
             @keyframes shutdown {
               0% { width: 0%; }
               100% { width: 100%; }
+            }
+            .shutdown-animation {
+              animation: shutdown 2s ease-out forwards;
             }
           `}</style>
         </>
