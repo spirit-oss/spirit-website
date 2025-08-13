@@ -4,9 +4,10 @@ import { ArrowLeft, MapPin, Wind, Droplets, Eye, Thermometer, Sun, Cloud, CloudR
 
 interface WeatherAppProps {
   onBack: () => void;
+  gpsEnabled?: boolean;
 }
 
-export const WeatherApp: React.FC<WeatherAppProps> = ({ onBack }) => {
+export const WeatherApp: React.FC<WeatherAppProps> = ({ onBack, gpsEnabled = true }) => {
   const [currentWeather, setCurrentWeather] = useState({
     location: 'San Francisco, CA',
     temperature: 22,
@@ -17,6 +18,18 @@ export const WeatherApp: React.FC<WeatherAppProps> = ({ onBack }) => {
     feelsLike: 24,
     uvIndex: 6
   });
+
+  // Update weather data based on GPS status
+  const displayWeather = {
+    location: gpsEnabled ? currentWeather.location : 'Unknown Location',
+    temperature: gpsEnabled ? currentWeather.temperature : null,
+    condition: gpsEnabled ? currentWeather.condition : 'No Data',
+    humidity: gpsEnabled ? currentWeather.humidity : null,
+    windSpeed: gpsEnabled ? currentWeather.windSpeed : null,
+    visibility: gpsEnabled ? currentWeather.visibility : null,
+    feelsLike: gpsEnabled ? currentWeather.feelsLike : null,
+    uvIndex: gpsEnabled ? currentWeather.uvIndex : null
+  };
 
   const [forecast, setForecast] = useState([
     { day: 'Today', high: 24, low: 18, condition: 'Partly Cloudy', icon: Cloud },
@@ -67,18 +80,33 @@ export const WeatherApp: React.FC<WeatherAppProps> = ({ onBack }) => {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <MapPin className="w-5 h-5 text-accent mr-2" />
-            <span className="text-white/80">{currentWeather.location}</span>
+            <span className="text-white/80">{displayWeather.location}</span>
           </div>
           
           <div className="mb-6">
-            <WeatherIcon className="w-24 h-24 text-accent mx-auto mb-4" />
-            <div className="text-6xl font-light text-white mb-2">
-              {currentWeather.temperature}°
-            </div>
-            <div className="text-xl text-white/70">{currentWeather.condition}</div>
-            <div className="text-white/50 mt-2">
-              Feels like {currentWeather.feelsLike}°
-            </div>
+            {gpsEnabled ? (
+              <>
+                <WeatherIcon className="w-24 h-24 text-accent mx-auto mb-4" />
+                <div className="text-6xl font-light text-white mb-2">
+                  {currentWeather.temperature}°
+                </div>
+                <div className="text-xl text-white/70">{currentWeather.condition}</div>
+                <div className="text-white/50 mt-2">
+                  Feels like {currentWeather.feelsLike}°
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="w-24 h-24 rounded-full bg-gray-500/20 flex items-center justify-center mx-auto mb-4">
+                  <MapPin className="w-12 h-12 text-gray-500" />
+                </div>
+                <div className="text-4xl font-light text-white/50 mb-2">--°</div>
+                <div className="text-xl text-white/50">No weather information</div>
+                <div className="text-white/40 mt-2">
+                  Location services required
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -89,7 +117,7 @@ export const WeatherApp: React.FC<WeatherAppProps> = ({ onBack }) => {
               <Wind className="w-5 h-5 text-accent mr-2" />
               <span className="text-white/70 text-sm">Wind</span>
             </div>
-            <div className="text-2xl font-medium text-white">{currentWeather.windSpeed}</div>
+            <div className="text-2xl font-medium text-white">{gpsEnabled ? currentWeather.windSpeed : '--'}</div>
             <div className="text-white/50 text-xs">km/h</div>
           </div>
 
@@ -98,7 +126,7 @@ export const WeatherApp: React.FC<WeatherAppProps> = ({ onBack }) => {
               <Droplets className="w-5 h-5 text-accent mr-2" />
               <span className="text-white/70 text-sm">Humidity</span>
             </div>
-            <div className="text-2xl font-medium text-white">{currentWeather.humidity}</div>
+            <div className="text-2xl font-medium text-white">{gpsEnabled ? currentWeather.humidity : '--'}</div>
             <div className="text-white/50 text-xs">%</div>
           </div>
 
@@ -107,7 +135,7 @@ export const WeatherApp: React.FC<WeatherAppProps> = ({ onBack }) => {
               <Eye className="w-5 h-5 text-accent mr-2" />
               <span className="text-white/70 text-sm">Visibility</span>
             </div>
-            <div className="text-2xl font-medium text-white">{currentWeather.visibility}</div>
+            <div className="text-2xl font-medium text-white">{gpsEnabled ? currentWeather.visibility : '--'}</div>
             <div className="text-white/50 text-xs">km</div>
           </div>
 
@@ -116,8 +144,8 @@ export const WeatherApp: React.FC<WeatherAppProps> = ({ onBack }) => {
               <Sun className="w-5 h-5 text-accent mr-2" />
               <span className="text-white/70 text-sm">UV Index</span>
             </div>
-            <div className="text-2xl font-medium text-white">{currentWeather.uvIndex}</div>
-            <div className="text-white/50 text-xs">High</div>
+            <div className="text-2xl font-medium text-white">{gpsEnabled ? currentWeather.uvIndex : '--'}</div>
+            <div className="text-white/50 text-xs">{gpsEnabled ? 'High' : 'N/A'}</div>
           </div>
         </div>
       </div>
@@ -125,30 +153,40 @@ export const WeatherApp: React.FC<WeatherAppProps> = ({ onBack }) => {
       {/* 5-Day Forecast */}
       <div className="flex-1 px-6 pb-8">
         <h3 className="text-lg font-medium text-white/90 mb-4">5-Day Forecast</h3>
-        <div className="space-y-3">
-          {forecast.map((day, index) => {
-            const DayIcon = day.icon;
-            return (
-              <div key={index} className="bg-black/20 rounded-2xl p-4 backdrop-blur-sm">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <DayIcon className="w-8 h-8 text-accent mr-4" />
-                    <div>
-                      <div className="text-white/90 font-medium">{day.day}</div>
-                      <div className="text-white/60 text-sm">{day.condition}</div>
+        {gpsEnabled ? (
+          <div className="space-y-3">
+            {forecast.map((day, index) => {
+              const DayIcon = day.icon;
+              return (
+                <div key={index} className="bg-black/20 rounded-2xl p-4 backdrop-blur-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <DayIcon className="w-8 h-8 text-accent mr-4" />
+                      <div>
+                        <div className="text-white/90 font-medium">{day.day}</div>
+                        <div className="text-white/60 text-sm">{day.condition}</div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-white/90">
-                      <span className="font-medium">{day.high}°</span>
-                      <span className="text-white/60 ml-2">{day.low}°</span>
+                    <div className="text-right">
+                      <div className="text-white/90">
+                        <span className="font-medium">{day.high}°</span>
+                        <span className="text-white/60 ml-2">{day.low}°</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="bg-black/20 rounded-2xl p-6 backdrop-blur-sm text-center">
+            <div className="w-16 h-16 rounded-full bg-gray-500/20 flex items-center justify-center mx-auto mb-4">
+              <MapPin className="w-8 h-8 text-gray-500" />
+            </div>
+            <p className="text-white/60">No forecast available</p>
+            <p className="text-white/40 text-sm mt-2">Enable GPS to view weather forecast</p>
+          </div>
+        )}
       </div>
     </div>
   );

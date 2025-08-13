@@ -4,9 +4,10 @@ import { ArrowLeft, Search, Navigation, MapPin, Star, Clock, Route } from 'lucid
 
 interface MapsAppProps {
   onBack: () => void;
+  gpsEnabled?: boolean;
 }
 
-export const MapsApp: React.FC<MapsAppProps> = ({ onBack }) => {
+export const MapsApp: React.FC<MapsAppProps> = ({ onBack, gpsEnabled = true }) => {
   const [activeTab, setActiveTab] = useState('map');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -101,32 +102,50 @@ export const MapsApp: React.FC<MapsAppProps> = ({ onBack }) => {
       <div className="flex-1 overflow-y-auto">
         {activeTab === 'map' && (
           <div className="flex-1 relative">
-            {/* Cached Map View */}
+            {/* Map View - GPS enabled/disabled */}
             <div className="h-full relative overflow-hidden">
-              {/* Cached Map Image */}
-              <img 
-                src="/map-cached.png" 
-                alt="Cached Map" 
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  // Fallback to gradient if image fails to load
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.parentElement!.classList.add('bg-gradient-to-br', 'from-green-800', 'via-green-700', 'to-green-900');
-                }}
-              />
+              {gpsEnabled ? (
+                /* Cached Map Image */
+                <img 
+                  src="/map-cached.png" 
+                  alt="Cached Map" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback to gradient if image fails to load
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement!.classList.add('bg-gradient-to-br', 'from-green-800', 'via-green-700', 'to-green-900');
+                  }}
+                />
+              ) : (
+                /* Can't Find Location Image */
+                <img 
+                  src="/cant-find-map.jpg" 
+                  alt="Can't find your location" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback to error state
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement!.classList.add('bg-gradient-to-br', 'from-gray-800', 'via-gray-700', 'to-gray-900');
+                  }}
+                />
+              )}
               
-              {/* Location Markers */}
-              <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <div className="w-6 h-6 bg-red-500 rounded-full border-2 border-white animate-pulse" />
-              </div>
-              
-              <div className="absolute top-1/2 left-1/3 transform -translate-x-1/2 -translate-y-1/2">
-                <div className="w-4 h-4 bg-blue-500 rounded-full border border-white" />
-              </div>
-              
-              <div className="absolute bottom-1/3 right-1/3 transform translate-x-1/2 translate-y-1/2">
-                <div className="w-4 h-4 bg-yellow-500 rounded-full border border-white" />
-              </div>
+              {/* Location Markers - only show when GPS enabled */}
+              {gpsEnabled && (
+                <>
+                  <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                    <div className="w-6 h-6 bg-red-500 rounded-full border-2 border-white animate-pulse" />
+                  </div>
+                  
+                  <div className="absolute top-1/2 left-1/3 transform -translate-x-1/2 -translate-y-1/2">
+                    <div className="w-4 h-4 bg-blue-500 rounded-full border border-white" />
+                  </div>
+                  
+                  <div className="absolute bottom-1/3 right-1/3 transform translate-x-1/2 translate-y-1/2">
+                    <div className="w-4 h-4 bg-yellow-500 rounded-full border border-white" />
+                  </div>
+                </>
+              )}
 
               {/* Map Controls */}
               <div className="absolute bottom-6 right-6 space-y-2">
@@ -140,9 +159,19 @@ export const MapsApp: React.FC<MapsAppProps> = ({ onBack }) => {
 
               {/* Current Location Info */}
               <div className="absolute bottom-6 left-6 bg-black/40 backdrop-blur-sm rounded-2xl p-4 max-w-xs">
-                <h3 className="text-white font-medium mb-1">Current Location</h3>
-                <p className="text-white/70 text-sm">Downtown Area</p>
-                <p className="text-white/50 text-xs mt-1">Accuracy: ±5 meters</p>
+                {gpsEnabled ? (
+                  <>
+                    <h3 className="text-white font-medium mb-1">Current Location</h3>
+                    <p className="text-white/70 text-sm">Downtown Area</p>
+                    <p className="text-white/50 text-xs mt-1">Accuracy: ±5 meters</p>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-white font-medium mb-1">Can't Find Your Location</h3>
+                    <p className="text-white/70 text-sm">GPS/Network unavailable</p>
+                    <p className="text-white/50 text-xs mt-1">Enable location services</p>
+                  </>
+                )}
               </div>
             </div>
           </div>

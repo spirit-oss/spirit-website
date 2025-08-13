@@ -13,7 +13,7 @@
 ---
 
 ## About This Repo
-In this repo we have the webapp for spirit oss
+In this repo we have the webapp for spirit oss. This is an emulated version of our andriod build along with some harware emulation so you can get the full experance.
 
 ---
 

@@ -192,7 +192,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   }
 
   if (currentApp === 'Phone') {
-    return <PhoneApp onBack={closeApp} />;
+    return <PhoneApp onBack={closeApp} networkEnabled={gpsEnabled} />;
   }
 
   if (currentApp === 'Messages') {
@@ -236,7 +236,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   }
 
   if (currentApp === 'Weather') {
-    return <WeatherApp onBack={closeApp} />;
+    return <WeatherApp onBack={closeApp} gpsEnabled={gpsEnabled} />;
   }
 
   if (currentApp === 'Gallery') {
@@ -256,7 +256,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   }
 
   if (currentApp === 'Maps') {
-    return <MapsApp onBack={closeApp} />;
+    return <MapsApp onBack={closeApp} gpsEnabled={gpsEnabled} />;
   }
 
   if (currentApp === 'F-Droid') {

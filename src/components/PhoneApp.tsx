@@ -4,10 +4,12 @@ import { ArrowLeft, Phone, Plus, Search } from 'lucide-react';
 
 interface PhoneAppProps {
   onBack: () => void;
+  networkEnabled?: boolean;
 }
 
-export const PhoneApp: React.FC<PhoneAppProps> = ({ onBack }) => {
+export const PhoneApp: React.FC<PhoneAppProps> = ({ onBack, networkEnabled = true }) => {
   const [activeTab, setActiveTab] = useState('recents');
+  const [showNetworkError, setShowNetworkError] = useState(false);
   
   const recentCalls = [
     { name: 'Mom', number: '+1 (555) 0123', time: '2 min ago', type: 'outgoing' },
@@ -28,6 +30,16 @@ export const PhoneApp: React.FC<PhoneAppProps> = ({ onBack }) => {
     { id: 'contacts', label: 'Contacts' },
     { id: 'keypad', label: 'Keypad' },
   ];
+
+  const handleCall = (number?: string) => {
+    if (!networkEnabled) {
+      setShowNetworkError(true);
+      setTimeout(() => setShowNetworkError(false), 3000);
+      return;
+    }
+    // Handle normal call functionality here
+    console.log('Calling:', number);
+  };
 
   return (
     <div className="h-full bg-gradient-surface text-white flex flex-col">
@@ -106,7 +118,10 @@ export const PhoneApp: React.FC<PhoneAppProps> = ({ onBack }) => {
                     <div className="text-white/60 text-sm">{contact.number}</div>
                   </div>
                 </div>
-                <button className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                <button 
+                  onClick={() => handleCall(contact.number)}
+                  className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center hover:bg-primary/30 transition-smooth"
+                >
                   <Phone className="w-5 h-5 text-primary" />
                 </button>
               </div>
@@ -132,13 +147,39 @@ export const PhoneApp: React.FC<PhoneAppProps> = ({ onBack }) => {
               ))}
             </div>
             
-            <button className="w-full mt-6 py-4 gradient-primary rounded-2xl text-white font-medium flex items-center justify-center">
+            <button 
+              onClick={() => handleCall('+1 (555) 0')}
+              className="w-full mt-6 py-4 gradient-primary rounded-2xl text-white font-medium flex items-center justify-center hover:scale-105 transition-smooth"
+            >
               <Phone className="w-5 h-5 mr-2" />
               Call
             </button>
           </div>
         )}
       </div>
+
+      {/* Network Error Modal */}
+      {showNetworkError && (
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gradient-to-br from-red-900/90 to-red-800/90 rounded-2xl p-6 mx-6 max-w-sm border border-red-500/20">
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
+                <Phone className="w-8 h-8 text-red-400" />
+              </div>
+              <h3 className="text-lg font-medium text-white mb-2">No Network Available</h3>
+              <p className="text-white/70 text-sm mb-4">
+                Unable to place call. Check your network connection and try again.
+              </p>
+              <button 
+                onClick={() => setShowNetworkError(false)}
+                className="px-6 py-2 bg-red-500/20 rounded-xl text-red-400 font-medium hover:bg-red-500/30 transition-smooth"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

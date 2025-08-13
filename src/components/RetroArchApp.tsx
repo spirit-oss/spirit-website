@@ -8,16 +8,19 @@ interface RetroArchAppProps {
 
 export const RetroArchApp: React.FC<RetroArchAppProps> = ({ onBack }) => {
   const [activeTab, setActiveTab] = useState('games');
+  const [currentGame, setCurrentGame] = useState<string | null>(null);
+  const [gameScore, setGameScore] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const games = [
     // Original games
-    { name: 'Super Mario Bros.', system: 'NES', rating: 5, image: 'bg-red-500' },
-    { name: 'Pac-Man', system: 'Arcade', rating: 4, image: 'bg-yellow-400' },
-    { name: 'Tetris', system: 'Game Boy', rating: 5, image: 'bg-green-500' },
-    // Knock-off versions
-    { name: 'Super Luigi Adventure', system: 'NES', rating: 4, image: 'bg-green-600' },
-    { name: 'Dot-Muncher', system: 'Arcade', rating: 3, image: 'bg-orange-400' },
-    { name: 'Block Drop', system: 'Game Boy', rating: 4, image: 'bg-blue-600' },
+    { id: 'mario', name: 'Super Mario Bros.', system: 'NES', rating: 5, image: 'bg-red-500', playable: false },
+    { id: 'pacman', name: 'Pac-Man', system: 'Arcade', rating: 4, image: 'bg-yellow-400', playable: false },
+    { id: 'tetris', name: 'Tetris', system: 'Game Boy', rating: 5, image: 'bg-green-500', playable: false },
+    // Knock-off versions (playable demos)
+    { id: 'luigi', name: 'Super Luigi Adventure', system: 'NES', rating: 4, image: 'bg-green-600', playable: true },
+    { id: 'dotmuncher', name: 'Dot-Muncher', system: 'Arcade', rating: 3, image: 'bg-orange-400', playable: true },
+    { id: 'blockdrop', name: 'Block Drop', system: 'Game Boy', rating: 4, image: 'bg-blue-600', playable: true },
   ];
 
   const systems = [
@@ -33,6 +36,148 @@ export const RetroArchApp: React.FC<RetroArchAppProps> = ({ onBack }) => {
     { id: 'systems', label: 'Systems' },
     { id: 'settings', label: 'Settings' },
   ];
+
+  const startGame = (gameId: string, gameName: string) => {
+    const game = games.find(g => g.id === gameId);
+    if (game?.playable) {
+      setCurrentGame(gameId);
+      setGameScore(0);
+      setIsPlaying(true);
+    } else {
+      // Show that original games need to be purchased/downloaded
+      alert(`${gameName} requires the full version. This is a demo environment.`);
+    }
+  };
+
+  const exitGame = () => {
+    setCurrentGame(null);
+    setIsPlaying(false);
+    setGameScore(0);
+  };
+
+  const incrementScore = () => {
+    setGameScore(prev => prev + 10);
+  };
+
+  // If a game is currently being played, show the game interface
+  if (currentGame) {
+    const game = games.find(g => g.id === currentGame);
+    return (
+      <div className="h-full bg-black text-white flex flex-col">
+        <StatusBar />
+        
+        {/* Game Header */}
+        <div className="flex items-center justify-between px-6 py-4 bg-black/50">
+          <button
+            onClick={exitGame}
+            className="px-4 py-2 bg-red-500/20 rounded-xl text-red-400 font-medium hover:bg-red-500/30 transition-smooth"
+          >
+            Exit Game
+          </button>
+          <h1 className="text-lg font-medium">{game?.name}</h1>
+          <div className="text-accent font-mono">Score: {gameScore}</div>
+        </div>
+
+        {/* Simple Game Demo Interface */}
+        <div className="flex-1 flex items-center justify-center p-6">
+          {currentGame === 'luigi' && (
+            <div className="text-center">
+              <div className="w-64 h-64 bg-gradient-to-b from-blue-400 to-green-400 rounded-2xl mb-6 relative overflow-hidden">
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                  <div className="w-8 h-8 bg-green-600 rounded border-2 border-green-400 animate-bounce">
+                    <span className="text-xs">L</span>
+                  </div>
+                </div>
+                <div className="absolute top-4 right-4 w-4 h-4 bg-yellow-400 rounded-full animate-pulse" />
+                <div className="absolute top-12 left-8 w-6 h-2 bg-brown-400 rounded" />
+              </div>
+              <p className="text-white/70 mb-4">Super Luigi Adventure Demo</p>
+              <button 
+                onClick={incrementScore}
+                className="px-6 py-3 gradient-primary rounded-xl font-medium hover:scale-105 transition-smooth"
+              >
+                Jump! (+10 points)
+              </button>
+            </div>
+          )}
+
+          {currentGame === 'dotmuncher' && (
+            <div className="text-center">
+              <div className="w-64 h-64 bg-black rounded-2xl mb-6 relative border-2 border-yellow-400 overflow-hidden">
+                <div className="grid grid-cols-8 gap-1 p-4 h-full">
+                  {[...Array(40)].map((_, i) => (
+                    <div key={i} className="w-2 h-2 bg-yellow-400 rounded-full opacity-50" />
+                  ))}
+                </div>
+                <div className="absolute top-1/2 left-1/4 w-6 h-6 bg-yellow-400 rounded-full">
+                  <div className="w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent border-t-black ml-3 mt-1" />
+                </div>
+              </div>
+              <p className="text-white/70 mb-4">Dot-Muncher Demo</p>
+              <button 
+                onClick={incrementScore}
+                className="px-6 py-3 gradient-primary rounded-xl font-medium hover:scale-105 transition-smooth"
+              >
+                Munch Dots! (+10 points)
+              </button>
+            </div>
+          )}
+
+          {currentGame === 'blockdrop' && (
+            <div className="text-center">
+              <div className="w-48 h-64 bg-gray-900 rounded-2xl mb-6 relative border-2 border-green-400 overflow-hidden">
+                <div className="grid grid-cols-6 gap-px p-2 h-full">
+                  {[...Array(60)].map((_, i) => (
+                    <div key={i} className={`w-full aspect-square ${
+                      i > 50 ? 'bg-green-500' : 
+                      i > 45 ? 'bg-blue-500' :
+                      i > 40 ? 'bg-red-500' : 'bg-transparent'
+                    } opacity-70`} />
+                  ))}
+                </div>
+                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 grid grid-cols-2 gap-px">
+                  <div className="w-4 h-4 bg-purple-500" />
+                  <div className="w-4 h-4 bg-purple-500" />
+                  <div className="w-4 h-4 bg-purple-500" />
+                  <div className="w-4 h-4 bg-purple-500" />
+                </div>
+              </div>
+              <p className="text-white/70 mb-4">Block Drop Demo</p>
+              <button 
+                onClick={incrementScore}
+                className="px-6 py-3 gradient-primary rounded-xl font-medium hover:scale-105 transition-smooth"
+              >
+                Drop Block! (+10 points)
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Game Controls */}
+        <div className="p-6 bg-black/30">
+          <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
+            <button className="aspect-square bg-white/10 rounded-2xl flex items-center justify-center text-white hover:bg-white/20 transition-smooth">
+              ←
+            </button>
+            <button className="aspect-square bg-white/10 rounded-2xl flex items-center justify-center text-white hover:bg-white/20 transition-smooth">
+              ↓
+            </button>
+            <button className="aspect-square bg-white/10 rounded-2xl flex items-center justify-center text-white hover:bg-white/20 transition-smooth">
+              →
+            </button>
+          </div>
+          <div className="flex justify-center mt-4 gap-4">
+            <button className="px-6 py-3 bg-red-500/20 rounded-xl text-red-400 font-medium hover:bg-red-500/30 transition-smooth">
+              A
+            </button>
+            <button className="px-6 py-3 bg-blue-500/20 rounded-xl text-blue-400 font-medium hover:bg-blue-500/30 transition-smooth">
+              B
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full bg-gradient-surface text-white flex flex-col">
@@ -114,9 +259,16 @@ export const RetroArchApp: React.FC<RetroArchAppProps> = ({ onBack }) => {
                         ))}
                       </div>
                       
-                      <button className="px-6 py-2 gradient-primary rounded-xl text-white text-sm font-medium transition-smooth hover:scale-105">
+                      <button 
+                        onClick={() => startGame(game.id, game.name)}
+                        className={`px-6 py-2 rounded-xl text-white text-sm font-medium transition-smooth hover:scale-105 ${
+                          game.playable 
+                            ? 'gradient-primary' 
+                            : 'bg-gray-500/20 text-gray-400'
+                        }`}
+                      >
                         <Play className="w-4 h-4 mr-2 inline" />
-                        Play
+                        {game.playable ? 'Play Demo' : 'Play'}
                       </button>
                     </div>
                   </div>
