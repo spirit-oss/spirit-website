@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { StatusBar } from './StatusBar';
-import { ArrowLeft, ChevronRight, Check, X } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Check, X, Play, Pause } from 'lucide-react';
 import { 
   Wifi, 
   Bluetooth, 
@@ -20,7 +20,8 @@ import {
   Languages,
   Clock,
   Accessibility,
-  Fingerprint
+  Fingerprint,
+  Image
 } from 'lucide-react';
 
 interface SettingsAppProps {
@@ -29,6 +30,38 @@ interface SettingsAppProps {
 
 export const SettingsApp: React.FC<SettingsAppProps> = ({ onBack }) => {
   const [selectedSetting, setSelectedSetting] = React.useState<string | null>(null);
+  const [selectedSoundCategory, setSelectedSoundCategory] = useState<string | null>(null);
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  
+  // Sound configuration state
+  const [soundSettings, setSoundSettings] = useState({
+    ringtones: {
+      default: 'old-ringtone.mp3',
+      work: 'work-calling.mp3',
+      mom: 'mom-calling.mp3',
+      boss: 'boss-calling.mp3'
+    },
+    textAlerts: {
+      default: 'woo-hoo-text.mp3',
+      special: 'mario-1-up.mp3'
+    },
+    alarms: {
+      default: 'basic-alarm.mp3',
+      work: 'back-to-work.mp3'
+    }
+  });
+
+  // Wallpaper state
+  const [currentWallpaper, setCurrentWallpaper] = useState('default');
+  
+  const wallpapers = [
+    { id: 'default', name: 'Spirit Gradient', preview: 'bg-gradient-surface', type: 'gradient' },
+    { id: 'background1', name: 'Background 1', preview: '/background1.jpeg', type: 'image' },
+    { id: 'background2', name: 'Background 2', preview: '/background2.jpeg', type: 'image' },
+    { id: 'background3', name: 'Background 3', preview: '/background3.jpeg', type: 'image' },
+    { id: 'background4', name: 'Background 4', preview: '/background4.jpeg', type: 'image' }
+  ];
 
   const settingsGroups = [
     {
@@ -43,7 +76,7 @@ export const SettingsApp: React.FC<SettingsAppProps> = ({ onBack }) => {
       items: [
         { icon: Volume2, name: "Sound & Vibration", value: "", color: "text-white/90", id: "sound" },
         { icon: Battery, name: "Battery", value: "87%", color: "text-accent", id: "battery" },
-        { icon: Smartphone, name: "Display", value: "", color: "text-white/90" },
+        { icon: Smartphone, name: "Display", value: "", color: "text-white/90", id: "display" },
       ]
     },
     {
@@ -63,71 +96,253 @@ export const SettingsApp: React.FC<SettingsAppProps> = ({ onBack }) => {
     }
   ];
 
-  // Individual setting screens
-  const renderSoundSettings = () => (
-    <div className="flex-1 overflow-y-auto">
-      <div className="px-6 py-6 space-y-6">
-        {/* Volume Controls */}
-        <div className="bg-black/20 rounded-2xl p-4 backdrop-blur-sm">
-          <h3 className="text-white/90 font-medium mb-4">Volume</h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-white/70">Media</span>
-              <div className="flex items-center space-x-3">
-                <div className="w-32 h-2 bg-white/20 rounded-full">
-                  <div className="w-3/4 h-2 bg-primary rounded-full" />
-                </div>
-                <span className="text-white/60 text-sm">75%</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-white/70">Ringtone</span>
-              <div className="flex items-center space-x-3">
-                <div className="w-32 h-2 bg-white/20 rounded-full">
-                  <div className="w-1/2 h-2 bg-primary rounded-full" />
-                </div>
-                <span className="text-white/60 text-sm">50%</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-white/70">Notifications</span>
-              <div className="flex items-center space-x-3">
-                <div className="w-32 h-2 bg-white/20 rounded-full">
-                  <div className="w-2/3 h-2 bg-primary rounded-full" />
-                </div>
-                <span className="text-white/60 text-sm">67%</span>
-              </div>
-            </div>
-          </div>
-        </div>
+  // Audio control functions
+  const playSound = async (soundFile: string) => {
+    const audio = audioRef.current;
+    if (!audio) return;
 
-        {/* Sound Options */}
-        <div className="bg-black/20 rounded-2xl p-4 backdrop-blur-sm">
-          <h3 className="text-white/90 font-medium mb-4">Sound Options</h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-white/70">Vibrate on ring</span>
-              <div className="w-12 h-6 rounded-full bg-primary relative">
-                <div className="w-5 h-5 rounded-full bg-white absolute top-0.5 right-0.5" />
+    try {
+      if (currentlyPlaying === soundFile) {
+        audio.pause();
+        setCurrentlyPlaying(null);
+      } else {
+        audio.src = `/${soundFile}`;
+        audio.currentTime = 0;
+        await audio.play();
+        setCurrentlyPlaying(soundFile);
+        
+        // Auto-stop after playback
+        audio.onended = () => setCurrentlyPlaying(null);
+      }
+    } catch (error) {
+      console.error('Audio playback error:', error);
+    }
+  };
+
+  // Sound category data
+  const soundCategories = {
+    ringtones: {
+      title: 'Ringtones',
+      icon: Bell,
+      color: 'text-blue-400',
+      sounds: [
+        { name: 'Classic Ring', file: 'old-ringtone.mp3', description: 'Traditional phone ring' },
+        { name: 'Work Call', file: 'work-calling.mp3', description: 'Professional tone' },
+        { name: 'Mom Calling', file: 'mom-calling.mp3', description: 'Family-friendly tone' },
+        { name: 'Boss Calling', file: 'boss-calling.mp3', description: 'Important call alert' }
+      ]
+    },
+    textAlerts: {
+      title: 'Text Alerts',
+      icon: Volume2,
+      color: 'text-green-400',
+      sounds: [
+        { name: 'Woo Hoo!', file: 'woo-hoo-text.mp3', description: 'Cheerful notification' },
+        { name: 'Mario 1-Up', file: 'mario-1-up.mp3', description: 'Game-style alert' }
+      ]
+    },
+    alarms: {
+      title: 'Alarms',
+      icon: Clock,
+      color: 'text-orange-400',
+      sounds: [
+        { name: 'Basic Alarm', file: 'basic-alarm.mp3', description: 'Standard wake-up call' },
+        { name: 'Back to Work', file: 'back-to-work.mp3', description: 'Productivity reminder' }
+      ]
+    }
+  };
+
+  // Individual setting screens
+  const renderSoundSettings = () => {
+    if (selectedSoundCategory) {
+      const category = soundCategories[selectedSoundCategory as keyof typeof soundCategories];
+      return (
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-6 py-6 space-y-6">
+            {/* Category Header */}
+            <div className="flex items-center mb-6">
+              <button
+                onClick={() => setSelectedSoundCategory(null)}
+                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center transition-smooth hover:bg-white/20 mr-4"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="flex items-center">
+                <div className={`w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mr-4`}>
+                  <category.icon className={`w-6 h-6 ${category.color}`} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-medium text-white">{category.title}</h2>
+                  <p className="text-white/60 text-sm">Tap to preview • Set as default</p>
+                </div>
               </div>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-white/70">Touch sounds</span>
-              <div className="w-12 h-6 rounded-full bg-white/20 relative">
-                <div className="w-5 h-5 rounded-full bg-white absolute top-0.5 left-0.5" />
+
+            {/* Sound List */}
+            <div className="space-y-3">
+              {category.sounds.map((sound, index) => (
+                <div key={index} className="bg-black/20 rounded-2xl p-4 backdrop-blur-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h4 className="text-white/90 font-medium">{sound.name}</h4>
+                      <p className="text-white/50 text-sm">{sound.description}</p>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3">
+                      {/* Preview Button */}
+                      <button
+                        onClick={() => playSound(sound.file)}
+                        className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center transition-smooth hover:bg-primary/30"
+                      >
+                        {currentlyPlaying === sound.file ? (
+                          <Pause className="w-5 h-5 text-primary" />
+                        ) : (
+                          <Play className="w-5 h-5 text-primary ml-0.5" />
+                        )}
+                      </button>
+                      
+                      {/* Set as Default Button */}
+                      <button 
+                        onClick={() => {
+                          const newSettings = { ...soundSettings };
+                          if (selectedSoundCategory === 'ringtones') {
+                            newSettings.ringtones.default = sound.file;
+                          } else if (selectedSoundCategory === 'textAlerts') {
+                            newSettings.textAlerts.default = sound.file;
+                          } else if (selectedSoundCategory === 'alarms') {
+                            newSettings.alarms.default = sound.file;
+                          }
+                          setSoundSettings(newSettings);
+                        }}
+                        className="px-4 py-2 rounded-xl bg-accent/20 text-accent text-sm font-medium transition-smooth hover:bg-accent/30"
+                      >
+                        Set Default
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Hidden Audio Element */}
+          <audio ref={audioRef} preload="metadata" />
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-6 py-6 space-y-6">
+          {/* Volume Controls */}
+          <div className="bg-black/20 rounded-2xl p-4 backdrop-blur-sm">
+            <h3 className="text-white/90 font-medium mb-4">Volume</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-white/70">Media</span>
+                <div className="flex items-center space-x-3">
+                  <div className="w-32 h-2 bg-white/20 rounded-full">
+                    <div className="w-3/4 h-2 bg-primary rounded-full" />
+                  </div>
+                  <span className="text-white/60 text-sm">75%</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-white/70">Ringtone</span>
+                <div className="flex items-center space-x-3">
+                  <div className="w-32 h-2 bg-white/20 rounded-full">
+                    <div className="w-1/2 h-2 bg-primary rounded-full" />
+                  </div>
+                  <span className="text-white/60 text-sm">50%</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-white/70">Notifications</span>
+                <div className="flex items-center space-x-3">
+                  <div className="w-32 h-2 bg-white/20 rounded-full">
+                    <div className="w-2/3 h-2 bg-primary rounded-full" />
+                  </div>
+                  <span className="text-white/60 text-sm">67%</span>
+                </div>
               </div>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-white/70">Screen lock sounds</span>
-              <div className="w-12 h-6 rounded-full bg-primary relative">
-                <div className="w-5 h-5 rounded-full bg-white absolute top-0.5 right-0.5" />
+          </div>
+
+          {/* Sound Categories */}
+          <div className="bg-black/20 rounded-2xl p-4 backdrop-blur-sm">
+            <h3 className="text-white/90 font-medium mb-4">Sound & Alerts</h3>
+            <div className="space-y-3">
+              {Object.entries(soundCategories).map(([key, category]) => (
+                <div
+                  key={key}
+                  onClick={() => setSelectedSoundCategory(key)}
+                  className="flex items-center justify-between p-3 bg-white/5 rounded-xl cursor-pointer transition-smooth hover:bg-white/10"
+                >
+                  <div className="flex items-center">
+                    <div className={`w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center mr-3`}>
+                      <category.icon className={`w-5 h-5 ${category.color}`} />
+                    </div>
+                    <div>
+                      <span className="text-white/90 block">{category.title}</span>
+                      <span className="text-white/50 text-xs">{category.sounds.length} sounds available</span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-white/40" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Sound Options */}
+          <div className="bg-black/20 rounded-2xl p-4 backdrop-blur-sm">
+            <h3 className="text-white/90 font-medium mb-4">Sound Options</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-white/70">Vibrate on ring</span>
+                <div className="w-12 h-6 rounded-full bg-primary relative">
+                  <div className="w-5 h-5 rounded-full bg-white absolute top-0.5 right-0.5" />
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-white/70">Touch sounds</span>
+                <div className="w-12 h-6 rounded-full bg-white/20 relative">
+                  <div className="w-5 h-5 rounded-full bg-white absolute top-0.5 left-0.5" />
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-white/70">Screen lock sounds</span>
+                <div className="w-12 h-6 rounded-full bg-primary relative">
+                  <div className="w-5 h-5 rounded-full bg-white absolute top-0.5 right-0.5" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Current Assignments */}
+          <div className="bg-black/20 rounded-2xl p-4 backdrop-blur-sm">
+            <h3 className="text-white/90 font-medium mb-4">Current Assignments</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-white/70">Default Ringtone</span>
+                <span className="text-white/90 text-sm">{soundSettings.ringtones.default.replace('.mp3', '').replace(/-/g, ' ')}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-white/70">Default Text Alert</span>
+                <span className="text-white/90 text-sm">{soundSettings.textAlerts.default.replace('.mp3', '').replace(/-/g, ' ')}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-white/70">Default Alarm</span>
+                <span className="text-white/90 text-sm">{soundSettings.alarms.default.replace('.mp3', '').replace(/-/g, ' ')}</span>
               </div>
             </div>
           </div>
         </div>
+        
+        {/* Hidden Audio Element */}
+        <audio ref={audioRef} preload="metadata" />
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderBatterySettings = () => (
     <div className="flex-1 overflow-y-auto">
@@ -393,6 +608,95 @@ export const SettingsApp: React.FC<SettingsAppProps> = ({ onBack }) => {
     </div>
   );
 
+  const renderDisplaySettings = () => (
+    <div className="flex-1 overflow-y-auto">
+      <div className="px-6 py-6 space-y-6">
+        {/* Wallpaper Section */}
+        <div className="bg-black/20 rounded-2xl p-4 backdrop-blur-sm">
+          <h3 className="text-white/90 font-medium mb-4">Wallpaper</h3>
+          <div className="grid grid-cols-2 gap-3">
+            {wallpapers.map((wallpaper) => (
+              <div
+                key={wallpaper.id}
+                onClick={() => setCurrentWallpaper(wallpaper.id)}
+                className={`relative rounded-xl overflow-hidden cursor-pointer transition-smooth hover:scale-105 ${
+                  currentWallpaper === wallpaper.id ? 'ring-2 ring-accent' : ''
+                }`}
+              >
+                {wallpaper.type === 'gradient' ? (
+                  <div className={`w-full h-24 ${wallpaper.preview}`} />
+                ) : (
+                  <img
+                    src={wallpaper.preview}
+                    alt={wallpaper.name}
+                    className="w-full h-24 object-cover"
+                  />
+                )}
+                
+                {/* Selection indicator */}
+                {currentWallpaper === wallpaper.id && (
+                  <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-accent flex items-center justify-center">
+                    <Check className="w-4 h-4 text-white" />
+                  </div>
+                )}
+                
+                {/* Wallpaper name */}
+                <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm p-2">
+                  <span className="text-white text-xs font-medium">{wallpaper.name}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Display Settings */}
+        <div className="bg-black/20 rounded-2xl p-4 backdrop-blur-sm">
+          <h3 className="text-white/90 font-medium mb-4">Screen</h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-white/70">Brightness</span>
+              <div className="flex items-center space-x-3">
+                <div className="w-32 h-2 bg-white/20 rounded-full">
+                  <div className="w-2/3 h-2 bg-primary rounded-full" />
+                </div>
+                <span className="text-white/60 text-sm">67%</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-white/70">Auto-brightness</span>
+              <div className="w-12 h-6 rounded-full bg-primary relative">
+                <div className="w-5 h-5 rounded-full bg-white absolute top-0.5 right-0.5" />
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-white/70">Screen timeout</span>
+              <span className="text-white/60">2 minutes</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Theme Settings */}
+        <div className="bg-black/20 rounded-2xl p-4 backdrop-blur-sm">
+          <h3 className="text-white/90 font-medium mb-4">Theme</h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-white/70">Dark mode</span>
+              <div className="w-12 h-6 rounded-full bg-primary relative">
+                <div className="w-5 h-5 rounded-full bg-white absolute top-0.5 right-0.5" />
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-white/70">Material You colors</span>
+              <div className="w-12 h-6 rounded-full bg-primary relative">
+                <div className="w-5 h-5 rounded-full bg-white absolute top-0.5 right-0.5" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   if (selectedSetting) {
     return (
       <div className="h-full bg-gradient-surface text-white flex flex-col">
@@ -409,6 +713,7 @@ export const SettingsApp: React.FC<SettingsAppProps> = ({ onBack }) => {
           <h1 className="text-xl font-medium">
             {selectedSetting === 'sound' && 'Sound & Vibration'}
             {selectedSetting === 'battery' && 'Battery'}
+            {selectedSetting === 'display' && 'Display'}
             {selectedSetting === 'privacy' && 'Privacy Dashboard'}
             {selectedSetting === 'security' && 'Security'}
             {selectedSetting === 'permissions' && 'App Permissions'}
@@ -418,6 +723,7 @@ export const SettingsApp: React.FC<SettingsAppProps> = ({ onBack }) => {
         {/* Setting Content */}
         {selectedSetting === 'sound' && renderSoundSettings()}
         {selectedSetting === 'battery' && renderBatterySettings()}
+        {selectedSetting === 'display' && renderDisplaySettings()}
         {selectedSetting === 'privacy' && renderPrivacySettings()}
         {selectedSetting === 'security' && renderSecuritySettings()}
         {selectedSetting === 'permissions' && renderPermissionsSettings()}

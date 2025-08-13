@@ -101,16 +101,19 @@ export const MapsApp: React.FC<MapsAppProps> = ({ onBack }) => {
       <div className="flex-1 overflow-y-auto">
         {activeTab === 'map' && (
           <div className="flex-1 relative">
-            {/* Simulated Map View */}
-            <div className="h-full bg-gradient-to-br from-green-800 via-green-700 to-green-900 relative overflow-hidden">
-              {/* Map Grid */}
-              <div className="absolute inset-0 opacity-20">
-                <div className="grid grid-cols-8 grid-rows-12 h-full">
-                  {[...Array(96)].map((_, i) => (
-                    <div key={i} className="border border-white/10" />
-                  ))}
-                </div>
-              </div>
+            {/* Cached Map View */}
+            <div className="h-full relative overflow-hidden">
+              {/* Cached Map Image */}
+              <img 
+                src="/map-cached.png" 
+                alt="Cached Map" 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback to gradient if image fails to load
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.parentElement!.classList.add('bg-gradient-to-br', 'from-green-800', 'via-green-700', 'to-green-900');
+                }}
+              />
               
               {/* Location Markers */}
               <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2">

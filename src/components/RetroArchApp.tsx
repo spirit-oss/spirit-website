@@ -10,12 +10,14 @@ export const RetroArchApp: React.FC<RetroArchAppProps> = ({ onBack }) => {
   const [activeTab, setActiveTab] = useState('games');
 
   const games = [
+    // Original games
     { name: 'Super Mario Bros.', system: 'NES', rating: 5, image: 'bg-red-500' },
-    { name: 'Sonic the Hedgehog', system: 'Genesis', rating: 5, image: 'bg-blue-500' },
-    { name: 'The Legend of Zelda', system: 'NES', rating: 5, image: 'bg-yellow-500' },
-    { name: 'Street Fighter II', system: 'SNES', rating: 4, image: 'bg-purple-500' },
     { name: 'Pac-Man', system: 'Arcade', rating: 4, image: 'bg-yellow-400' },
     { name: 'Tetris', system: 'Game Boy', rating: 5, image: 'bg-green-500' },
+    // Knock-off versions
+    { name: 'Super Luigi Adventure', system: 'NES', rating: 4, image: 'bg-green-600' },
+    { name: 'Dot-Muncher', system: 'Arcade', rating: 3, image: 'bg-orange-400' },
+    { name: 'Block Drop', system: 'Game Boy', rating: 4, image: 'bg-blue-600' },
   ];
 
   const systems = [

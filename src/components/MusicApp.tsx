@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { StatusBar } from './StatusBar';
 import { ArrowLeft, Play, Pause, SkipBack, SkipForward, Volume2, Shuffle, Repeat } from 'lucide-react';
 
@@ -9,39 +9,108 @@ interface MusicAppProps {
 export const MusicApp: React.FC<MusicAppProps> = ({ onBack }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSong, setCurrentSong] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const audioRef = useRef<HTMLAudioElement>(null);
   
   const playlist = [
     {
-      title: 'Digital Dreams',
-      artist: 'Synthwave Collective',
-      album: 'Neon Nights',
-      duration: '3:42',
+      title: 'Track 1',
+      artist: 'Local Artist',
+      album: 'Spirit Collection',
+      src: '/music1.mp3',
       cover: 'gradient-primary'
     },
     {
-      title: 'Open Source Symphony',
-      artist: 'Code Musicians',
-      album: 'FOSS Vibes',
-      duration: '4:15',
+      title: 'Track 2',
+      artist: 'Local Artist',
+      album: 'Spirit Collection',
+      src: '/music2.mp3',
       cover: 'gradient-app'
     },
     {
-      title: 'Privacy Anthem',
-      artist: 'Encrypted Beats',
-      album: 'Secure Sounds',
-      duration: '3:28',
+      title: 'Track 3',
+      artist: 'Local Artist',
+      album: 'Spirit Collection',
+      src: '/music3.mp3',
       cover: 'bg-accent'
     },
     {
-      title: 'AOSP Blues',
-      artist: 'Android Collective',
-      album: 'Mobile Melodies',
-      duration: '2:56',
+      title: 'Track 4',
+      artist: 'Local Artist',
+      album: 'Spirit Collection',
+      src: '/music4.mp3',
       cover: 'bg-orange-500'
     }
   ];
 
   const currentTrack = playlist[currentSong];
+
+  // Audio event handlers
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const handleDurationChange = () => setDuration(audio.duration);
+    const handleEnded = () => {
+      setIsPlaying(false);
+      // Auto-play next song
+      if (currentSong < playlist.length - 1) {
+        setCurrentSong(currentSong + 1);
+      }
+    };
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('durationchange', handleDurationChange);
+    audio.addEventListener('ended', handleEnded);
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('durationchange', handleDurationChange);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, [currentSong, playlist.length]);
+
+  // Update audio source when song changes
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.src = currentTrack.src;
+      audio.load();
+      if (isPlaying) {
+        audio.play().catch(console.error);
+      }
+    }
+  }, [currentSong, currentTrack.src]);
+
+  // Handle play/pause
+  const togglePlayPause = async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    try {
+      if (isPlaying) {
+        audio.pause();
+      } else {
+        await audio.play();
+      }
+      setIsPlaying(!isPlaying);
+    } catch (error) {
+      console.error('Audio playback error:', error);
+    }
+  };
+
+  // Format time in mm:ss
+  const formatTime = (time: number) => {
+    if (isNaN(time)) return '0:00';
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  // Calculate progress percentage
+  const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
     <div className="h-full bg-gradient-surface text-white flex flex-col overflow-hidden">
@@ -82,11 +151,14 @@ export const MusicApp: React.FC<MusicAppProps> = ({ onBack }) => {
           {/* Progress Bar */}
           <div className="w-full mb-6 px-2">
             <div className="flex justify-between text-sm text-white/60 mb-2">
-              <span>1:23</span>
-              <span>{currentTrack.duration}</span>
+              <span>{formatTime(currentTime)}</span>
+              <span>{formatTime(duration)}</span>
             </div>
             <div className="w-full bg-white/20 rounded-full h-1">
-              <div className="bg-primary h-1 rounded-full w-1/3 transition-all duration-300" />
+              <div 
+                className="bg-primary h-1 rounded-full transition-all duration-300" 
+                style={{ width: `${progressPercentage}%` }}
+              />
             </div>
           </div>
 
@@ -104,7 +176,7 @@ export const MusicApp: React.FC<MusicAppProps> = ({ onBack }) => {
             </button>
             
             <button
-              onClick={() => setIsPlaying(!isPlaying)}
+              onClick={togglePlayPause}
               className="w-16 h-16 rounded-full gradient-primary flex items-center justify-center transition-smooth hover:scale-105 app-shadow"
             >
               {isPlaying ? (
@@ -148,12 +220,15 @@ export const MusicApp: React.FC<MusicAppProps> = ({ onBack }) => {
                   <h4 className="text-white/90 font-medium text-sm truncate">{song.title}</h4>
                   <p className="text-white/60 text-xs truncate">{song.artist}</p>
                 </div>
-                <span className="text-white/60 text-xs flex-shrink-0">{song.duration}</span>
+                <span className="text-white/60 text-xs flex-shrink-0">{formatTime(duration)}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
+      
+      {/* Hidden Audio Element */}
+      <audio ref={audioRef} preload="metadata" />
     </div>
   );
 };

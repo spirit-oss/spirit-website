@@ -11,12 +11,12 @@ export const GalleryApp: React.FC<GalleryAppProps> = ({ onBack }) => {
   const [activeTab, setActiveTab] = useState('photos');
 
   const photos = [
-    { id: 1, name: 'Sunset Beach', date: '2024-01-15', size: '2.4 MB', category: 'Nature' },
-    { id: 2, name: 'City Lights', date: '2024-01-14', size: '3.1 MB', category: 'Urban' },
-    { id: 3, name: 'Mountain View', date: '2024-01-13', size: '2.8 MB', category: 'Nature' },
-    { id: 4, name: 'Coffee Shop', date: '2024-01-12', size: '1.9 MB', category: 'Lifestyle' },
-    { id: 5, name: 'Street Art', date: '2024-01-11', size: '2.2 MB', category: 'Art' },
-    { id: 6, name: 'Ocean Waves', date: '2024-01-10', size: '3.5 MB', category: 'Nature' },
+    { id: 1, name: 'Camera Photo 1', date: '2024-01-15', size: '2.4 MB', category: 'Camera', src: '/img1.jpg' },
+    { id: 2, name: 'Camera Photo 2', date: '2024-01-14', size: '3.1 MB', category: 'Camera', src: '/img2.jpg' },
+    { id: 3, name: 'Camera Photo 3', date: '2024-01-13', size: '2.8 MB', category: 'Camera', src: '/img3.jpg' },
+    { id: 4, name: 'Camera Photo 4', date: '2024-01-12', size: '1.9 MB', category: 'Camera', src: '/img4.jpg' },
+    { id: 5, name: 'Camera Photo 5', date: '2024-01-11', size: '2.2 MB', category: 'Camera', src: '/img5.jpg' },
+    { id: 6, name: 'Screenshot', date: '2024-01-10', size: '3.5 MB', category: 'Screenshots', src: '/img6.jpg' },
   ];
 
   const albums = [
@@ -53,8 +53,20 @@ export const GalleryApp: React.FC<GalleryAppProps> = ({ onBack }) => {
 
         {/* Image Display */}
         <div className="flex-1 flex items-center justify-center p-6">
-          <div className="w-full max-w-sm aspect-square bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl flex items-center justify-center">
-            <ImageIcon className="w-24 h-24 text-white/40" />
+          <div className="w-full max-w-sm aspect-square bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl overflow-hidden">
+            <img 
+              src={photo?.src} 
+              alt={photo?.name} 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                // Fallback to icon if image fails to load
+                e.currentTarget.style.display = 'none';
+                const fallback = document.createElement('div');
+                fallback.className = 'w-full h-full flex items-center justify-center';
+                fallback.innerHTML = '<svg className="w-24 h-24 text-white/40" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" /></svg>';
+                e.currentTarget.parentElement?.appendChild(fallback);
+              }}
+            />
           </div>
         </div>
 
@@ -134,9 +146,21 @@ export const GalleryApp: React.FC<GalleryAppProps> = ({ onBack }) => {
                 <div
                   key={photo.id}
                   onClick={() => setSelectedImage(photo.id)}
-                  className="aspect-square bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl flex items-center justify-center cursor-pointer hover:scale-105 transition-smooth"
+                  className="aspect-square bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl overflow-hidden cursor-pointer hover:scale-105 transition-smooth"
                 >
-                  <ImageIcon className="w-8 h-8 text-white/40" />
+                  <img 
+                    src={photo.src} 
+                    alt={photo.name} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback to icon if image fails to load
+                      e.currentTarget.style.display = 'none';
+                      const fallback = document.createElement('div');
+                      fallback.className = 'w-full h-full flex items-center justify-center';
+                      fallback.innerHTML = '<svg class="w-8 h-8 text-white/40" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" /></svg>';
+                      e.currentTarget.parentElement?.appendChild(fallback);
+                    }}
+                  />
                 </div>
               ))}
             </div>
