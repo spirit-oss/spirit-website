@@ -75,6 +75,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [notificationOffset, setNotificationOffset] = useState(0);
   const [showCameraCrash, setShowCameraCrash] = useState(false);
+  const [lastTap, setLastTap] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearchInput, setShowSearchInput] = useState(false);
 
 
   const mainApps = [
@@ -149,6 +152,39 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       setShowNotificationPanel(true);
     }
     setNotificationOffset(0);
+  };
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    if (!isFullyBooted || !isUnlocked) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickY = e.clientY - rect.top;
+    
+    // Check if double-click is in the top area (status bar area)
+    if (clickY < 100) {
+      setShowNotificationPanel(true);
+    }
+  };
+
+  const handleSearchClick = () => {
+    if (!isFullyBooted || !isUnlocked) return;
+    setShowSearchInput(true);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      // Open browser with DuckDuckGo search URL
+      const searchUrl = `https://duckduckgo.com/?q=${searchQuery.replace(/\s+/g, '+')}`;
+      // For now, we'll just open the browser app - in a real app this would navigate to the URL
+      setCurrentApp('Browser');
+      setShowSearchInput(false);
+      setSearchQuery('');
+    }
+  };
+
+  const handleSearchCancel = () => {
+    setShowSearchInput(false);
+    setSearchQuery('');
   };
 
   if (currentApp === 'Settings') {
@@ -253,6 +289,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onDoubleClick={handleDoubleClick}
       style={{
         transform: showNotificationPanel ? 'none' : `translateY(${Math.min(notificationOffset * 0.1, 30)}px)`,
         transition: isDragging ? 'none' : 'transform 0.3s ease-out'
@@ -275,15 +312,32 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
         {/* DuckDuckGo Search Widget */}
         <div className="mb-8">
-          <button
-            onClick={() => openApp('Browser')}
-            className="w-full bg-black/20 backdrop-blur-sm rounded-2xl p-4 border border-white/10 hover:bg-black/30 transition-smooth"
-          >
-            <div className="flex items-center">
-              <Search className="w-5 h-5 text-white/70 mr-3" />
-              <span className="text-white/70 text-left">Search DuckDuckGo</span>
-            </div>
-          </button>
+          {showSearchInput ? (
+            <form onSubmit={handleSearchSubmit} className="w-full bg-black/20 backdrop-blur-sm rounded-2xl border border-white/10">
+              <div className="flex items-center p-4">
+                <Search className="w-5 h-5 text-white/70 mr-3 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search DuckDuckGo"
+                  className="flex-1 bg-transparent text-white placeholder-white/60 outline-none"
+                  autoFocus
+                  onBlur={handleSearchCancel}
+                />
+              </div>
+            </form>
+          ) : (
+            <button
+              onClick={handleSearchClick}
+              className="w-full bg-black/20 backdrop-blur-sm rounded-2xl p-4 border border-white/10 hover:bg-black/30 transition-smooth"
+            >
+              <div className="flex items-center">
+                <Search className="w-5 h-5 text-white/70 mr-3" />
+                <span className="text-white/70 text-left">Search DuckDuckGo</span>
+              </div>
+            </button>
+          )}
         </div>
 
         {/* Main apps grid */}

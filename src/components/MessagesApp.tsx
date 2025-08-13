@@ -6,10 +6,25 @@ interface MessagesAppProps {
   onBack: () => void;
 }
 
+interface Message {
+  text: string;
+  sender: 'me' | 'them';
+  time: string;
+}
+
+interface Conversation {
+  id: number;
+  name: string;
+  lastMessage: string;
+  time: string;
+  unread: number;
+  messages: Message[];
+}
+
 export const MessagesApp: React.FC<MessagesAppProps> = ({ onBack }) => {
   const [selectedChat, setSelectedChat] = useState<number | null>(null);
-  
-  const conversations = [
+  const [newMessage, setNewMessage] = useState('');
+  const [conversations, setConversations] = useState<Conversation[]>([
     {
       id: 1,
       name: 'Mom',
@@ -45,7 +60,45 @@ export const MessagesApp: React.FC<MessagesAppProps> = ({ onBack }) => {
         { text: 'New Spirit OS update available', sender: 'them', time: 'Monday 10:30 AM' },
       ]
     },
-  ];
+  ]);
+
+  const handleChatSelect = (chatId: number) => {
+    // Clear unread count when opening a chat
+    setConversations(prevConvs => 
+      prevConvs.map(conv => 
+        conv.id === chatId ? { ...conv, unread: 0 } : conv
+      )
+    );
+    setSelectedChat(chatId);
+  };
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !selectedChat) return;
+
+    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const newMsg: Message = {
+      text: newMessage.trim(),
+      sender: 'me',
+      time: currentTime
+    };
+
+    setConversations(prevConvs => 
+      prevConvs.map(conv => {
+        if (conv.id === selectedChat) {
+          return {
+            ...conv,
+            messages: [...conv.messages, newMsg],
+            lastMessage: newMsg.text,
+            time: currentTime
+          };
+        }
+        return conv;
+      })
+    );
+
+    setNewMessage('');
+  };
 
   const currentChat = conversations.find(c => c.id === selectedChat);
 
@@ -92,20 +145,26 @@ export const MessagesApp: React.FC<MessagesAppProps> = ({ onBack }) => {
         </div>
 
         {/* Message Input */}
-        <div className="p-6 border-t border-white/10">
+        <form onSubmit={handleSendMessage} className="p-6 border-t border-white/10">
           <div className="flex items-center space-x-3">
             <div className="flex-1 bg-black/20 rounded-full px-4 py-3 backdrop-blur-sm">
               <input
                 type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type a message..."
                 className="w-full bg-transparent text-white placeholder-white/60 outline-none"
               />
             </div>
-            <button className="w-12 h-12 gradient-primary rounded-full flex items-center justify-center">
+            <button 
+              type="submit"
+              disabled={!newMessage.trim()}
+              className="w-12 h-12 gradient-primary rounded-full flex items-center justify-center disabled:opacity-50 transition-smooth"
+            >
               <Send className="w-5 h-5 text-white" />
             </button>
           </div>
-        </div>
+        </form>
       </div>
     );
   }
@@ -145,7 +204,7 @@ export const MessagesApp: React.FC<MessagesAppProps> = ({ onBack }) => {
         {conversations.map((chat) => (
           <div
             key={chat.id}
-            onClick={() => setSelectedChat(chat.id)}
+            onClick={() => handleChatSelect(chat.id)}
             className="flex items-center p-6 border-b border-white/5 hover:bg-white/5 transition-smooth cursor-pointer"
           >
             <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mr-4">
